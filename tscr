@@ -1,0 +1,68 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+use Getopt::Long qw/:config no_ignore_case no_auto_abbrev/;
+use Pod::Usage;
+
+# Global Constants
+my %interp_set     = map { ($_, $_) } qw/bash zsh sh csh ksh tcsh perl ruby python python3/;
+my %extensions     = qw/sh bash pl perl rb ruby py python3/;
+my $default_interp = 'bash';
+my $pod_file_name  = 'tscr.pod';
+
+# Main
+my $given_interp = &parse_argument();
+
+foreach (@ARGV) {
+    my $interp = &decide_interp(&extract_extension($_), $given_interp);
+
+    unless (defined $interp)    {
+        warn "unsupported extension is found at $_\n";
+        next;
+    }
+
+    open FILE, '>', $_ or die "failed to open the file $_ ($!)\n";
+
+    print FILE "#!/usr/bin/env $interp\n\n";
+    print FILE "use warnings;\nuse strict;\n\n" if $interp eq 'perl';
+
+    close FILE;
+
+    `chmod +x $_`;
+}
+
+# Subroutines
+sub parse_argument {
+    my @input_interp  = (0, '');
+    my $getopt_result = GetOptions 
+        'i|interpreter=s' => sub { $input_interp[0]++; $input_interp[1] = $_[1]; },
+        'v|version'       => sub { pod2usage(-verbose => 99, -sections => 'NAME|VERSION', -exitval => 0, -input => $pod_file_name) },
+        'h|help'          => sub { pod2usage(-verbose => 1, -input => $pod_file_name) },
+        'm|man'           => sub { pod2usage(-verbose => 2, -input => $pod_file_name) };
+
+	pod2usage(-verbose => 99, -sections => 'NAME|VERSION|SYNOPSIS', -exitval => 0, -input => $pod_file_name) if @ARGV == 0;
+    die "An error occurred while parsing arguments\n" unless $getopt_result;
+    die "illegal options provided\n" unless $input_interp[0] < 2;
+    die "unsupported interpreter provided\n" unless $input_interp[0] != 1 || exists $interp_set{$input_interp[1]};    
+
+    $input_interp[1] or undef
+}
+
+sub extract_extension {
+    $_[0] =~ /^.+\.([^.]+?)$/ ? $1 : undef
+}
+
+sub decide_interp {
+    my ($ext, $given_interp) = @_;
+
+    if (defined $ext) {
+        exists $extensions{$ext} ? $extensions{$ext} :
+        defined $given_interp    ? $given_interp     :
+        undef;
+    }
+    else {
+        defined $given_interp ? $given_interp : $default_interp;
+    }
+}
