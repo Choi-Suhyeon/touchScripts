@@ -26,7 +26,8 @@ script.pl \[options\] \[file ...\]
 - **-o, --options**
 
     Specify the code options to be appended below the shebang. If no options are provided, files containing only the shebang will be created. 
-    &#x3d;item **-v, --version**
+
+- **-v, --version**
 
     Displays the version of the script.
 
