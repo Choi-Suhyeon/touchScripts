@@ -9,11 +9,12 @@ use Pod::Usage;
 # Global Constants
 my %interp_set     = map { ($_, $_) } qw/bash zsh sh csh ksh tcsh perl ruby python python3/;
 my %extensions     = qw/sh bash pl perl rb ruby py python3/;
-my $default_interp = 'bash';
 my $pod_file_name  = 'tscr.pod';
+my $default_interp = 'bash';
 
 # Main
-my $given_interp = &parse_argument();
+my %argv_parsed               = &parse_arguments();
+my ($given_interp, $opts_ref) = @argv_parsed{qw/input_interp options/};
 
 foreach (@ARGV) {
     my $interp = &decide_interp(&extract_extension($_), $given_interp);
@@ -26,17 +27,19 @@ foreach (@ARGV) {
     open FILE, '>', $_ or die "failed to open the file $_ ($!)\n";
 
     print FILE "#!/usr/bin/env $interp\n\n";
-    print FILE "use warnings;\nuse strict;\n\n" if $interp eq 'perl';
+	print FILE &get_str_for_opt($interp, @{$opts_ref});
 
     close FILE;
 
-    `chmod +x $_`;
+	chmod 0775, $_;
 }
 
 # Subroutines
-sub parse_argument {
+sub parse_arguments {
     my @input_interp  = (0, '');
+	my @options       = ();
     my $getopt_result = GetOptions 
+		'o|options=s'     => \@options,
         'i|interpreter=s' => sub { $input_interp[0]++; $input_interp[1] = $_[1]; },
         'v|version'       => sub { pod2usage(-verbose => 99, -sections => 'NAME|VERSION', -exitval => 0, -input => $pod_file_name) },
         'h|help'          => sub { pod2usage(-verbose => 1, -input => $pod_file_name) },
@@ -47,11 +50,21 @@ sub parse_argument {
     die "illegal options provided\n" unless $input_interp[0] < 2;
     die "unsupported interpreter provided\n" unless $input_interp[0] != 1 || exists $interp_set{$input_interp[1]};    
 
-    $input_interp[1] or undef
+	my %result = (input_interp => ($input_interp[1] or undef), options => [split /,/, join ',', @options]);
+	
+	%result
 }
 
 sub extract_extension {
     $_[0] =~ /^.+\.([^.]+?)$/ ? $1 : undef
+}
+
+sub get_str_for_opt {
+	my $interp = shift @_;
+
+	return "use warnings;\nuse strict;\n\n" if $interp eq 'perl' && grep { $_ eq 'pl-strict' } @_;
+	return "from pwn import *\n\n\nif __name__ == '__main__':\n\n" if ($interp eq 'python' || $interp eq 'python3') && grep { $_ eq 'py-pwn' } @_;
+	return "if __name__ == '__main__':\n\n" if ($interp eq 'python' || $interp eq 'python3') && grep { $_ eq 'py-main' } @_;
 }
 
 sub decide_interp {

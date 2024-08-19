@@ -4,7 +4,7 @@ Script Generator - A simple script generator based on file extensions
 
 # VERSION
 
-0.0.0 (2024.08.13.)
+1.0.0 (2024.08.20.)
 
 # SYNOPSIS
 
@@ -12,6 +12,7 @@ script.pl \[options\] \[file ...\]
 
     Options:
       -i, --interpreter  specify the interpreter to use (e.g., bash, zsh, perl, ruby etc.)
+      -o, --options      specify code options to be appended below the shebang (e.g., pl-strict, py-pwn etc.)
       -v, --version      display the script version
       -h, --help         brief help message
       -m, --man          full documentation
@@ -22,7 +23,10 @@ script.pl \[options\] \[file ...\]
 
     Specify the interpreter to use for the script. The default is 'bash'. If the script extension is recognized (e.g., \`.pl\` for Perl), the appropriate interpreter will be used automatically unless overridden.
 
-- **-v, --version**
+- **-o, --options**
+
+    Specify the code options to be appended below the shebang. If no options are provided, files containing only the shebang will be created. 
+    &#x3d;item **-v, --version**
 
     Displays the version of the script.
 
@@ -43,3 +47,21 @@ The supported interpreters include bash, zsh, sh, csh, ksh, tcsh, perl, ruby, py
 If no specific extension is provided, the script will use the interpreter given as an option or the default interpreter.
 
 If an extension is provided and it is unsupported, the script will raise an error. This happens if no interpreter is provided as an option, rather than using the default interpreter.
+
+Options are defined with a hyphen, placing the interpreter on the left and the distinguishing name of the options on the right. You can include multiple options. However, if more than one option of the same interpreter is provided, only one will be applied.
+
+## OPTIONS AVAILABLE
+
+- pl-strict : (perl)
+
+            use warnings;
+            use strict;
+
+- py-pwn : (python, python3)
+
+            from pwn import *
+            if __name__ == '__main__':
+
+- py-main : (python, python3) 
+
+            if __name__ == '__main__':
