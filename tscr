@@ -1,5 +1,15 @@
 #!/usr/bin/env perl
 
+# Copyright 2024 SUHYEON CHOI
+# 
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, 
+# either version 3 of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 use warnings;
 use strict;
 
@@ -7,7 +17,7 @@ use Getopt::Long qw/:config no_ignore_case no_auto_abbrev/;
 use Pod::Usage;
 
 # Global Constants
-my %interp_set     = map { ($_, $_) } qw/bash zsh sh csh ksh tcsh perl ruby python python3/;
+my %interp_set     = map { $_ => $_ } qw/bash zsh sh csh ksh tcsh perl ruby python python3/;
 my %extensions     = qw/sh bash pl perl rb ruby py python3/;
 my $pod_file_name  = 'tscr.pod';
 my $default_interp = 'bash';
@@ -19,7 +29,7 @@ my ($given_interp, $opts_ref) = @argv_parsed{qw/input_interp options/};
 foreach (@ARGV) {
     my $interp = &decide_interp(&extract_extension($_), $given_interp);
 
-    unless (defined $interp)    {
+    unless (defined $interp) {
         warn "unsupported extension is found at $_\n";
         next;
     }
@@ -27,7 +37,7 @@ foreach (@ARGV) {
     open FILE, '>', $_ or die "failed to open the file $_ ($!)\n";
 
     print FILE "#!/usr/bin/env $interp\n\n";
-	print FILE &get_str_for_opt($interp, @{$opts_ref});
+	print FILE &get_str_for_opt($interp, $opts_ref);
 
     close FILE;
 
@@ -50,7 +60,7 @@ sub parse_arguments {
     die "illegal options provided\n" unless $input_interp[0] < 2;
     die "unsupported interpreter provided\n" unless $input_interp[0] != 1 || exists $interp_set{$input_interp[1]};    
 
-	my %result = (input_interp => ($input_interp[1] or undef), options => [split /,/, join ',', @options]);
+	my %result = (input_interp => ($input_interp[1] or undef), options => { map { $_ => $_ } split /,/, join ',', @options });
 	
 	%result
 }
@@ -60,11 +70,11 @@ sub extract_extension {
 }
 
 sub get_str_for_opt {
-	my $interp = shift @_;
+	my ($interp, $opts) = @_;
 
-	return "use warnings;\nuse strict;\n\n" if $interp eq 'perl' && grep { $_ eq 'pl-strict' } @_;
-	return "from pwn import *\n\n\nif __name__ == '__main__':\n\n" if ($interp eq 'python' || $interp eq 'python3') && grep { $_ eq 'py-pwn' } @_;
-	return "if __name__ == '__main__':\n\n" if ($interp eq 'python' || $interp eq 'python3') && grep { $_ eq 'py-main' } @_;
+	return "use warnings;\nuse strict;\n\n" if $interp eq 'perl' && exists $opts->{'pl-strict'};
+	return "from pwn import *\n\n\nif __name__ == '__main__':\n\n" if ($interp eq 'python' || $interp eq 'python3') && exists $opts->{'py-pwn'};
+	return "if __name__ == '__main__':\n\n" if ($interp eq 'python' || $interp eq 'python3') && exists $opts->{'py-main'};
 }
 
 sub decide_interp {

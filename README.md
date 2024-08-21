@@ -4,7 +4,7 @@ Script Generator - A simple script generator based on file extensions
 
 # VERSION
 
-1.0.0 (2024.08.20.)
+1.0.1 (2024.08.21.)
 
 # SYNOPSIS
 
@@ -66,3 +66,7 @@ Options are defined with a hyphen, placing the interpreter on the left and the d
 - py-main : (python, python3) 
 
             if __name__ == '__main__':
+
+# LICENSE
+
+This project is licensed under the GNU General Public License v3.0
