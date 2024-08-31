@@ -14,6 +14,7 @@ use warnings;
 use strict;
 
 use Getopt::Long qw/:config no_ignore_case no_auto_abbrev/;
+use List::Util qw/all/;
 use File::Spec;
 use Pod::Usage;
 use FindBin;
@@ -25,10 +26,15 @@ my $pod_file_name  = File::Spec->catfile($FindBin::RealBin, 'tscr.pod');
 my $default_interp = 'bash';
 
 # Main
-my %argv_parsed               = &parse_arguments();
-my ($given_interp, $opts_ref) = @argv_parsed{qw/input_interp options/};
+my %argv_parsed                        = &parse_arguments();
+my ($forced, $given_interp, $opts_ref) = @argv_parsed{qw/forced input_interp options/};
 
 foreach (@ARGV) {
+	if (! $forced && -s) {
+		warn "$_ : already exists and contains content\n";
+		next;
+	}
+
     my $interp = &decide_interp(&extract_extension($_), $given_interp);
 
     unless (defined $interp) {
@@ -48,22 +54,24 @@ foreach (@ARGV) {
 
 # Subroutines
 sub parse_arguments {
-    my @input_interp  = (0, '');
+	my %result        = (input_interp => undef, forced => 0);
+	my @counts        = (0, 0);
 	my @options       = ();
     my $getopt_result = GetOptions 
 		'o|options=s'     => \@options,
-        'i|interpreter=s' => sub { $input_interp[0]++; $input_interp[1] = $_[1]; },
+        'i|interpreter=s' => sub { $counts[0]++; $result{input_interp} = $_[1] },
+		'f|forced'        => sub { $counts[1]++; $result{forced} = 1 },
         'v|version'       => sub { pod2usage(-verbose => 99, -sections => 'NAME|VERSION', -exitval => 0, -input => $pod_file_name) },
         'h|help'          => sub { pod2usage(-verbose => 1, -input => $pod_file_name) },
         'm|man'           => sub { pod2usage(-verbose => 2, -input => $pod_file_name) };
 
 	pod2usage(-verbose => 99, -sections => 'NAME|VERSION|SYNOPSIS', -exitval => 0, -input => $pod_file_name) if @ARGV == 0;
     die "An error occurred while parsing arguments\n" unless $getopt_result;
-    die "illegal options provided\n" unless $input_interp[0] < 2;
-    die "unsupported interpreter provided\n" unless $input_interp[0] != 1 || exists $interp_set{$input_interp[1]};    
+    die "illegal options provided\n" unless all { $_ == 0 || $_ == 1 } @counts;
+    die "unsupported interpreter provided\n" if $counts[0] == 1 && ! exists $interp_set{$result{input_interp}};    
 
-	my %result = (input_interp => ($input_interp[1] or undef), options => { map { $_ => $_ } split /,/, join ',', @options });
-	
+	$result{options} = { map { $_ => $_ } split /,/, join ',', @options };
+
 	%result
 }
 

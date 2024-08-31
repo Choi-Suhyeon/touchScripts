@@ -13,6 +13,7 @@ script.pl \[options\] \[file ...\]
     Options:
       -i, --interpreter  specify the interpreter to use (e.g., bash, zsh, perl, ruby etc.)
       -o, --options      specify code options to be appended below the shebang (e.g., pl-strict, py-pwn etc.)
+      -f, --forced       overwrite files forcefully without warning, even if they exist
       -v, --version      display the script version
       -h, --help         brief help message
       -m, --man          full documentation
@@ -26,6 +27,10 @@ script.pl \[options\] \[file ...\]
 - **-o, --options**
 
     Specify the code options to be appended below the shebang. If no options are provided, files containing only the shebang will be created. 
+
+- **-f, --forced**
+
+    Overwrite files without warning, even if they exist. If this option is not set, no action will be taken on the files after a warning is issued.
 
 - **-v, --version**
 
