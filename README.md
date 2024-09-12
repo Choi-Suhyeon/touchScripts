@@ -4,7 +4,7 @@ Script Generator - A simple script generator based on file extensions
 
 # VERSION
 
-2.1.0 (2024.09.12.)
+2.0.1 (2024.09.13.)
 
 # SYNOPSIS
 
@@ -26,7 +26,7 @@ script.pl \[options\] \[file ...\]
 
 - **-o, --options**
 
-    Specify the code options to be appended below the shebang. If no options are provided, files containing only the shebang will be created. 
+    Specify the code options to be appended below the shebang. If no options are provided, files containing only the shebang will be created. To use two or more options, you must either write them separately or list them without spaces, separated by a comma (,). For example, the following two methods are equivalent: `-o py-pwn -o pl-strict`, `-o py-pwn,pl-strict`.
 
 - **-f, --forced**
 

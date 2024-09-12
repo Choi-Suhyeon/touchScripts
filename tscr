@@ -32,13 +32,14 @@ my $pod_file_name  = File::Spec->catfile($FindBin::RealBin, 'tscr.pod');
 die "there is no file 'tscr_opts.yml'\n" unless -s -f -r $opts_file_name;
 die "there is no file 'tscr.pod'\n" unless -s -f -r $pod_file_name;
 
-my %options = %{LoadFile($opts_file_name)};
+my %options      = %{LoadFile $opts_file_name};
+my %option_names = map { $_ => $_ } keys %options;
 
 # Main
 my %argv_parsed                        = &parse_arguments();
 my ($forced, $given_interp, $opts_ref) = @argv_parsed{qw/forced input_interp options/};
 
-foreach (@ARGV) {
+for (@ARGV) {
 	if (-e) {
 		unless ($forced) {
 			warn "$_ : already exists and contains content\n";
@@ -81,12 +82,13 @@ sub parse_arguments {
         'h|help'          => sub { pod2usage(-verbose => 1, -input => $pod_file_name) },
         'm|man'           => sub { pod2usage(-verbose => 2, -input => $pod_file_name) };
 
+	$result{options} = { map { $_ => $_ } split /,/, join ',', @options };
+
 	pod2usage(-verbose => 99, -sections => 'NAME|VERSION|SYNOPSIS', -exitval => 0, -input => $pod_file_name) if @ARGV == 0;
     die "An error occurred while parsing arguments\n" unless $getopt_result;
     die "illegal options provided\n" unless all { $_ == 0 || $_ == 1 } @counts;
     die "unsupported interpreter provided\n" if $counts[0] == 1 && ! exists $interp_set{$result{input_interp}};    
-
-	$result{options} = { map { $_ => $_ } split /,/, join ',', @options };
+	die "unsupported options provided\n" unless all { exists $option_names{$_} } keys %{$result{options}};
 
 	%result
 }
@@ -103,6 +105,8 @@ sub get_str_for_opt {
 			return $vals->{code} || '';
 		}
 	}
+
+	''
 }
 
 sub decide_interp {
