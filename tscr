@@ -12,9 +12,11 @@
 
 use warnings;
 use strict;
+use 5.010;
 
 use Getopt::Long qw/:config no_ignore_case no_auto_abbrev/;
 use List::Util qw/all/;
+use YAML qw/LoadFile/;
 use File::Spec;
 use Pod::Usage;
 use FindBin;
@@ -22,17 +24,31 @@ use FindBin;
 # Global Constants
 my %interp_set     = map { $_ => $_ } qw/bash zsh sh csh ksh tcsh perl ruby python python3/;
 my %extensions     = qw/sh bash pl perl rb ruby py python3/;
-my $pod_file_name  = File::Spec->catfile($FindBin::RealBin, 'tscr.pod');
 my $default_interp = 'bash';
+
+my $opts_file_name = File::Spec->catfile($FindBin::RealBin, 'tscr_opts.yml');
+my $pod_file_name  = File::Spec->catfile($FindBin::RealBin, 'tscr.pod');
+
+die "there is no file 'tscr_opts.yml'\n" unless -s -f -r $opts_file_name;
+die "there is no file 'tscr.pod'\n" unless -s -f -r $pod_file_name;
+
+my %options = %{LoadFile($opts_file_name)};
 
 # Main
 my %argv_parsed                        = &parse_arguments();
 my ($forced, $given_interp, $opts_ref) = @argv_parsed{qw/forced input_interp options/};
 
 foreach (@ARGV) {
-	if (! $forced && -s) {
-		warn "$_ : already exists and contains content\n";
-		next;
+	if (-e) {
+		unless ($forced) {
+			warn "$_ : already exists and contains content\n";
+			next;
+		}
+
+		unless (-w _) {
+			warn "$_ : lacks write permission\n";
+			next;
+		}
 	}
 
     my $interp = &decide_interp(&extract_extension($_), $given_interp);
@@ -82,9 +98,11 @@ sub extract_extension {
 sub get_str_for_opt {
 	my ($interp, $opts) = @_;
 
-	return "use warnings;\nuse strict;\n\n" if $interp eq 'perl' && exists $opts->{'pl-strict'};
-	return "from pwn import *\n\n\nif __name__ == '__main__':\n\n" if ($interp eq 'python' || $interp eq 'python3') && exists $opts->{'py-pwn'};
-	return "if __name__ == '__main__':\n\n" if ($interp eq 'python' || $interp eq 'python3') && exists $opts->{'py-main'};
+	while (my ($opt_name, $vals) = each %options) {
+		if (exists $opts->{$opt_name} && grep { $_ eq $interp } @{$vals->{interp}}) {
+			return $vals->{code} || '';
+		}
+	}
 }
 
 sub decide_interp {

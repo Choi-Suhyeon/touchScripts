@@ -4,7 +4,7 @@ Script Generator - A simple script generator based on file extensions
 
 # VERSION
 
-1.0.1 (2024.08.21.)
+2.1.0 (2024.09.12.)
 
 # SYNOPSIS
 
@@ -55,6 +55,20 @@ If no specific extension is provided, the script will use the interpreter given 
 If an extension is provided and it is unsupported, the script will raise an error. This happens if no interpreter is provided as an option, rather than using the default interpreter.
 
 Options are defined with a hyphen, placing the interpreter on the left and the distinguishing name of the options on the right. You can include multiple options. However, if more than one option of the same interpreter is provided, only one will be applied.
+
+To add more options for file generation, you can modify the 'tscr_opts.yml' file. However, improper formatting in this file may cause errors or prevent the script from working correctly.
+
+## YAML FILE (tscr\_opts.yml) FORMAT
+
+```yaml
+option_name: # your custom option name
+interp: # list of supported interpreters
+  - interpreter 1 
+  - interpreter 2
+# code to append
+code: |
+  code text
+```
 
 ## OPTIONS AVAILABLE
 

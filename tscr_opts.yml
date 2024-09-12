@@ -1,0 +1,24 @@
+pl-strict: 
+  interp:
+    - perl
+  code: |
+    use warnings;
+    use strict;
+
+py-main:
+  interp:
+    - python
+    - python3
+  code: |
+    if __name__ == '__main__':
+
+py-pwn:
+  interp:
+    - python
+    - python3
+  code: |
+    from pwn import *
+
+
+    if __name__ == '__main__':
+
