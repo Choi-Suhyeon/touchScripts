@@ -26,13 +26,15 @@ my %interp_set     = map { $_ => $_ } qw/bash zsh sh csh ksh tcsh perl ruby pyth
 my %extensions     = qw/sh bash pl perl rb ruby py python3/;
 my $default_interp = 'bash';
 
-my $opts_file_name = File::Spec->catfile($FindBin::RealBin, 'tscr_opts.yml');
-my $pod_file_name  = File::Spec->catfile($FindBin::RealBin, 'tscr.pod');
+my $opts_file_name = 'tscr_opts.yml';
+my $pod_file_name  = 'tscr.pod';
+my $opts_file_path = File::Spec->catfile($FindBin::RealBin, $opts_file_name);
+my $pod_file_path  = File::Spec->catfile($FindBin::RealBin, $pod_file_name);
 
-die "there is no file 'tscr_opts.yml'\n" unless -s -f -r $opts_file_name;
-die "there is no file 'tscr.pod'\n" unless -s -f -r $pod_file_name;
+die "there is no file '$opts_file_name'\n" unless -s -f -r $opts_file_path;
+die "there is no file '$pod_file_name'\n" unless -s -f -r $pod_file_path;
 
-my %options      = %{LoadFile $opts_file_name};
+my %options      = %{LoadFile $opts_file_path};
 my %option_names = map { $_ => $_ } keys %options;
 
 # Main
@@ -78,13 +80,13 @@ sub parse_arguments {
 		'o|options=s'     => \@options,
         'i|interpreter=s' => sub { $counts[0]++; $result{input_interp} = $_[1] },
 		'f|forced'        => sub { $counts[1]++; $result{forced} = 1 },
-        'v|version'       => sub { pod2usage(-verbose => 99, -sections => 'NAME|VERSION', -exitval => 0, -input => $pod_file_name) },
-        'h|help'          => sub { pod2usage(-verbose => 1, -input => $pod_file_name) },
-        'm|man'           => sub { pod2usage(-verbose => 2, -input => $pod_file_name) };
+        'v|version'       => sub { pod2usage(-verbose => 99, -sections => 'NAME|VERSION', -exitval => 0, -input => $pod_file_path) },
+        'h|help'          => sub { pod2usage(-verbose => 1, -input => $pod_file_path) },
+        'm|man'           => sub { pod2usage(-verbose => 2, -input => $pod_file_path) };
 
 	$result{options} = { map { $_ => $_ } split /,/, join ',', @options };
 
-	pod2usage(-verbose => 99, -sections => 'NAME|VERSION|SYNOPSIS', -exitval => 0, -input => $pod_file_name) if @ARGV == 0;
+	pod2usage(-verbose => 99, -sections => 'NAME|VERSION|SYNOPSIS', -exitval => 0, -input => $pod_file_path) if @ARGV == 0;
     die "An error occurred while parsing arguments\n" unless $getopt_result;
     die "illegal options provided\n" unless all { $_ == 0 || $_ == 1 } @counts;
     die "unsupported interpreter provided\n" if $counts[0] == 1 && ! exists $interp_set{$result{input_interp}};    
